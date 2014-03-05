@@ -1,0 +1,57 @@
+#!/usr/bin/env php
+<?php
+require_once(__DIR__ . '/vendor/autoload.php');
+// $t = file_get_contents('./get_video_info');
+// $y = [];
+// parse_str($t, $y);
+// print_r($y);
+// $u = explode(',', $y['url_encoded_fmt_stream_map']);
+// foreach ($u as $o) {
+//     $i = [];
+//     parse_str($o, $i);
+//     print_r($i);
+//     echo strlen($i['s']) . PHP_EOL;
+// }
+// print_r(get_headers("http://r9---sn-25g7sn7z.googlevideo.com/videoplayback?sver=3&upn=2r7ioFtEd9A&ratebypass=yes&ipbits=0&source=youtube&key=yt5&itag=22&ip=81.64.168.56&ms=au&gcr=fr&fexp=903903%2C932296%2C914933%2C926523%2C937417%2C937416%2C913434%2C936910%2C936913%2C902907%2C934022&mv=m&mt=1394031670&sparams=gcr%2Cid%2Cip%2Cipbits%2Citag%2Cratebypass%2Csource%2Cupn%2Cexpire&id=o-AFWKl0fuTu1v0c_AeAr5U5q6yjqBLKXuUl5gh0NWOelx&expire=1394056839&signature=06BA9F472CFDB7897ED952B2BC943DDF2F250630.4DAE9E154AE018FD2050E5E64CCB5D1FA1F97A90", true));
+// exit;
+use Gin\Downloader\Extractor\Youtube;
+
+$options = getopt('v:');
+if (!isset($options['v'])) {
+    throw new InvalidArgumentException("Argument -v must be defined");
+}
+$code    = $options['v'];
+
+if (filter_var($code, FILTER_VALIDATE_URL) !== false) {
+    $response = parse_url($code, PHP_URL_QUERY);
+    if (!$response['query']) {
+        throw new InvalidArgumentException("Argument -v must be a youtube code ?v=__CODE__");
+    }
+    $query = [];
+    parse_str($response['query'], $query);
+    if (!isset($query['v'])) {
+        throw new InvalidArgumentException("Argument -v must be a youtube code ?v=__CODE__");
+    }
+    $code = $query['v'];
+}
+
+if (!defined("YT_COOKIE_PATH")) {
+    $dir = __DIR__ . '/cookie';
+    if (!is_dir($dir)) {
+        if (!mkdir($dir)) {
+            throw new RuntimeException("Unable to create y");
+        }
+    }
+    $file = $dir . '/ytcookie';
+    $ifle = "/home/kily/.config/google-chrome-beta/Default/YTCookies";
+    define("YT_COOKIE_PATH", $file);
+}
+
+$yt = new Youtube($code);
+
+$urls = $yt->extract();
+
+foreach ($urls as $q => $data) {
+    echo $q . PHP_EOL;
+    echo "\t" . $data['url'] . PHP_EOL;
+}

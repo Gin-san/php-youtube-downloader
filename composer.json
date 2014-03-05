@@ -1,0 +1,31 @@
+{
+    "name": "gin/php-yt-dl",
+    "type": "library",
+    "homepage": "https://github.com/Gin-san/php-yt-dl",
+    "authors": [
+        {
+            "name": "Gin-san",
+            "email": "gin.san.rzlk.g@gmail.com",
+            "role": "Developer",
+            "homepage": "https://github.com/Gin-san"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "": "src"
+        }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Gin-san/php-tools.git"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "gin/php-tools": "dev-master"
+    },
+    "minimum-stability": "stable",
+    "extra": {
+    }
+}
