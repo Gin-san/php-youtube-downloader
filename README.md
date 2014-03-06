@@ -20,7 +20,7 @@ This script is inspired from [youtube-dl](https://github.com/rg3/youtube-dl) (sp
      # install packages using composer
      $ composer.phar install
 
-# Use
+# Usage
 
      $ ./php-yt-dl -v [CODE_VIDEO]
 
