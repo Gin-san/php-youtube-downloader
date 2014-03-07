@@ -6,6 +6,11 @@ use Gin\Tools\Curl\Curl;
 use UnexpectedValueException;
 use RuntimeException;
 
+/**
+ * Extract data from a video
+ *
+ * @author Gin-san <gin.san.rzlk.g@gmail.com>
+ */
 class Youtube
 {
     const VIDEO_INFO_URL = "https://www.youtube.com/get_video_info?&video_id=%s%s&ps=default&eurl=&gl=US&hl=en";
@@ -16,6 +21,11 @@ class Youtube
     protected $video_id;
     protected $player_content;
 
+    /**
+     * Constructor
+     *
+     * @param string $video_id Code Youtube video
+     */
     public function __construct($video_id)
     {
         $this->video_id = $video_id;
@@ -27,6 +37,11 @@ class Youtube
         ];
     }
 
+    /**
+     * Extract available url to download from a video
+     *
+     * @return array List of all available url to download
+     */
     public function extract()
     {
         $info = [];
@@ -53,20 +68,13 @@ class Youtube
             echo "encrypted signatures detected" . PHP_EOL;
             $info['url_encoded_fmt_stream_map'] = $this->getEncryptedStream();
         }
-        $info['url_encoded_fmt_stream_map'] = explode(',', $info['url_encoded_fmt_stream_map']/* . ',' . $info['adaptive_fmts']*/);
+        $info['url_encoded_fmt_stream_map'] = explode(',', $info['url_encoded_fmt_stream_map']);
         $urls                               = [];
-        // print_r($info);exit;
         foreach ($info['url_encoded_fmt_stream_map'] as $stream_map) {
             parse_str($stream_map, $stream_data);
             $sig                = isset($stream_data['sig']) ? $stream_data['sig']:null;
-            // $stream_data['url'] = urldecode($stream_data['url']);
             if (isset($stream_data['s'])) {
-                // echo strlen($stream_data['s']) . PHP_EOL;
-                // print_r($stream_data);
-                // continue;
-                // $stream_data['s'] = "8181DCD93F1C31F62AB31E460035D7B88F0B31FED4.DF5A871DEEEA94E29A0218E640496E5E4B9F9E58E599";
                 $sig = $this->findSignature($stream_data['s']);
-                // exit;
             }
             $url = $stream_data['url'];
             if (!is_null($sig)) {
@@ -99,6 +107,13 @@ class Youtube
         return $urls;
     }
 
+    /**
+     * Get video information
+     *
+     * @param  string $extra Extra parameters
+     *
+     * @return array         Video Information
+     */
     protected function getInfo($extra = "")
     {
         $url      = sprintf(self::VIDEO_INFO_URL, $this->video_id, $extra);
@@ -108,6 +123,11 @@ class Youtube
         return $response;
     }
 
+    /**
+     * Get encrypted video stream from Youtube page
+     *
+     * @return string video stream
+     */
     protected function getEncryptedStream()
     {
         $matches     = [];
@@ -119,6 +139,13 @@ class Youtube
         return $data['args']['url_encoded_fmt_stream_map'];
     }
 
+    /**
+     * Find a signature from an encrypted one
+     *
+     * @param  string $s Encrypted signature
+     *
+     * @return string    Deciphered signature
+     */
     protected function findSignature($s)
     {
         $url         = sprintf(self::VIDEO_WEB_URL, $this->video_id);
@@ -156,6 +183,14 @@ class Youtube
         return $signature;
     }
 
+    /**
+     * Interpret a javascript fonction
+     *
+     * @param  string $funcname Function name
+     * @param  array  $args     Function arguments
+     *
+     * @return $mixed           Function return value
+     */
     public function interpret_function($funcname, $args)
     {
         $matches    = [];
@@ -172,6 +207,14 @@ class Youtube
         return $res;
     }
 
+    /**
+     * Interpret a javascript statement
+     *
+     * @param  string $stmt       Statement
+     * @param  array  $local_vars List of variables
+     *
+     * @return mixed              Statement return value
+     */
     protected function interpret_statement($stmt, &$local_vars)
     {
         if (strpos($stmt, 'return') !== false) {
@@ -193,6 +236,14 @@ class Youtube
         return $val;
     }
 
+    /**
+     * Interpret an expression
+     *
+     * @param  string $exp        Expression
+     * @param  array  $local_vars List of variables
+     *
+     * @return mixed              Expression return value
+     */
     protected function interpret_expression($exp, &$local_vars)
     {
         if (ctype_digit($exp)) {

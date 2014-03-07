@@ -4,5 +4,5 @@ require_once(__DIR__ . '/vendor/autoload.php');
 
 use Gin\Downloader\DownloaderApplication;
 
-$application = new DownloaderApplication("PHP Youtube Downloader", "0.9");
+$application = new DownloaderApplication("PHP Youtube Downloader", "0.9", __DIR__);
 $application->run();

@@ -6,8 +6,30 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
 use Gin\Downloader\Command\YoutubeCommand;
 
+/**
+ * Youtube downloader application
+ *
+ * @author Gin-san <gin.san.rzlk.g@gmail.com>
+ */
 class DownloaderApplication extends Application
 {
+    protected $rootPath;
+
+    /**
+     * Constructor.
+     *
+     * @param string $name     The name of the application
+     * @param string $version  The version of the application
+     * @param string $rootPAth Application path
+     *
+     */
+    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', $rootPath = null)
+    {
+        $this->setRootPath($rootPath);
+
+        parent::__construct($name, $version);
+    }
+
     /**
      * Gets the name of the command based on input.
      *
@@ -32,7 +54,7 @@ class DownloaderApplication extends Application
         // which is used when using the --help option
         $defaultCommands = parent::getDefaultCommands();
 
-        $defaultCommands[] = new YoutubeCommand();
+        $defaultCommands[] = (new YoutubeCommand())->setRootPath($this->getRootPath());
 
         return $defaultCommands;
     }
@@ -48,5 +70,29 @@ class DownloaderApplication extends Application
         $inputDefinition->setArguments();
 
         return $inputDefinition;
+    }
+
+    /**
+     * Set Application path
+     *
+     * @param string $rootPath Application path
+     *
+     * @return Gin\Downloader\DownloaderApplication $this
+     */
+    public function setRootPath($rootPath)
+    {
+        $this->rootPath = $rootPath;
+
+        return $this;
+    }
+
+    /**
+     * Get application path
+     *
+     * @return string Application path
+     */
+    public function getRootPath()
+    {
+        return $this->rootPath;
     }
 }

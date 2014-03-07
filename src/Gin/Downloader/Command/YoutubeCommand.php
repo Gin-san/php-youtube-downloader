@@ -8,9 +8,21 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Gin\Downloader\Extractor\Youtube;
+use RuntimeException;
+use InvalidArgumentException;
 
+/**
+ * Command to get available links to downloads, display and/or download videos
+ *
+ * @author Gin-san <gin.san.rzlk.g@gmail.com>
+ */
 class YoutubeCommand extends Command
 {
+    protected $rootPath;
+
+    /**
+     * {@inheritdoc}
+     */
     protected function configure()
     {
         $this->setName('gin:dl:youtube')
@@ -23,6 +35,9 @@ EOT
             );
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $codes = $input->getArgument('v');
@@ -41,6 +56,15 @@ EOT
         }
     }
 
+    /**
+     * Check input code
+     *
+     * @param  string $code Input value
+     *
+     * @throws InvalidArgumentException If no code found
+     *
+     * @return string Code Youtube
+     */
     protected function checkCode($code)
     {
         if (filter_var($code, FILTER_VALIDATE_URL) !== false) {
@@ -59,10 +83,13 @@ EOT
         return $code;
     }
 
+    /**
+     * Set default cookie path
+     */
     protected function definedCookiePath()
     {
         if (!defined("YT_COOKIE_PATH")) {
-            $dir = __DIR__ . '/cookie';
+            $dir = $this->getRootPath() . '/cookie';
             if (!is_dir($dir)) {
                 if (!mkdir($dir)) {
                     throw new RuntimeException("Unable to create y");
@@ -72,4 +99,29 @@ EOT
             define("YT_COOKIE_PATH", $file);
         }
     }
+
+    /**
+     * Set Application path
+     *
+     * @param string $rootPath Application path
+     *
+     * @return Gin\Downloader\Command\YoutubeCommand $this
+     */
+    public function setRootPath($rootPath)
+    {
+        $this->rootPath = $rootPath;
+
+        return $this;
+    }
+
+    /**
+     * Get application path
+     *
+     * @return string Application path
+     */
+    public function getRootPath()
+    {
+        return $this->rootPath;
+    }
+
 }
