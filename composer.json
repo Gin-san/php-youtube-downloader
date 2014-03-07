@@ -23,6 +23,7 @@
     ],
     "require": {
         "php": ">=5.4",
+        "symfony/console": "~2.1",
         "gin/php-tools": "dev-master"
     },
     "minimum-stability": "stable",
