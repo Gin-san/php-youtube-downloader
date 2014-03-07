@@ -22,7 +22,7 @@ This script is inspired from [youtube-dl](https://github.com/rg3/youtube-dl) (sp
 
 # Usage
 
-     $ ./php-yt-dl -v [CODE_VIDEO]
+     $ ./php-yt-dl [CODE_VIDEO]
 
 # TODO
 
