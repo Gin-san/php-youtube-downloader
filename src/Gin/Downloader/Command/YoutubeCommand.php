@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Gin\Downloader\DownloaderApplication;
 use Gin\Downloader\Extractor\Youtube;
 use RuntimeException;
 use InvalidArgumentException;
@@ -18,21 +19,41 @@ use InvalidArgumentException;
  */
 class YoutubeCommand extends Command
 {
+
+    public static $CALL_NAME = "PHP Youtube downloader";
     protected $rootPath;
+    protected $download;
+    protected $best;
+    protected $itag;
 
     /**
      * {@inheritdoc}
      */
     protected function configure()
     {
-        $this->setName('gin:dl:youtube')
+        $cmdname = DownloaderApplication::$SCRIPT_FILENAME;
+        $this->setName($cmdname)
             ->setDescription('Script PHP to download Youtube.com videos')
-            ->addArgument('v', InputArgument::REQUIRED | InputArgument::IS_ARRAY, 'Youtube code ?v=__CODE__')
-            ->setHelp(<<<EOT
-Usage:
-    $ php ./php-yt-dl [CODE|...]
-EOT
-            );
+            ->addArgument('v', InputArgument::REQUIRED | InputArgument::IS_ARRAY, 'Youtube code \'?v=__CODE__\'')
+            ->addOption('download', 'd', InputOption::VALUE_NONE, 'Download input videos (default ask which format to download)')
+            ->addOption('download-best', null, InputOption::VALUE_NONE, 'Download best videos format')
+            ->addOption('prefered-itag', 'i', InputOption::VALUE_REQUIRED, 'Prefered itag video (can be a list separed by comma character)');
+    }
+
+    /**
+     * @{@inheritdoc}
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        $this->download  = $input->hasParameterOption(['--download', '-d', 'download-best']);
+        $this->best = $input->hasParameterOption(['download-best']);
+        if ($input->hasParameterOption(['--prefered-itag', '-i'])) {
+            $this->best = false;
+            $this->itag      = $input->getOption('prefered-itag');
+        }
+        if ($this->download) {
+            $output->wln("download mode enabled");
+        }
     }
 
     /**
@@ -43,15 +64,16 @@ EOT
         $codes = $input->getArgument('v');
 
         foreach ($codes as $code) {
+            $output->wln("get %s", $code);
             $code = $this->checkCode($code);
             $this->definedCookiePath();
 
-            $yt   = new Youtube($code);
+            $yt   = new Youtube($code, $output);
             $urls = $yt->extract();
 
             foreach ($urls as $q => $data) {
-                $output->writeln($q);
-                $output->writeln("\t" . $data['url']);
+                $output->wln("%s - %s", $q, $data['ext']);
+                $output->wln("\t%s", $data['url']);
             }
         }
     }
@@ -70,12 +92,12 @@ EOT
         if (filter_var($code, FILTER_VALIDATE_URL) !== false) {
             $response = parse_url($code, PHP_URL_QUERY);
             if (!$response['query']) {
-               throw new InvalidArgumentException("A Youtube code must be defined '?v=__CODE__'");
+                throw new InvalidArgumentException("A Youtube code must be defined '?v=__CODE__'");
             }
             $query = [];
             parse_str($response['query'], $query);
             if (!isset($query['v'])) {
-               throw new InvalidArgumentException("A Youtube code must be defined '?v=__CODE__'");
+                throw new InvalidArgumentException("A Youtube code must be defined '?v=__CODE__'");
             }
             $code = $query['v'];
         }
@@ -123,5 +145,4 @@ EOT
     {
         return $this->rootPath;
     }
-
 }

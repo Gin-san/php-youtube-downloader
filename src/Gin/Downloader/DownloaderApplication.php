@@ -2,8 +2,11 @@
 
 namespace Gin\Downloader;
 
+use RuntimeException;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\ArrayInput;
 use Gin\Downloader\Command\YoutubeCommand;
 
 /**
@@ -14,18 +17,23 @@ use Gin\Downloader\Command\YoutubeCommand;
 class DownloaderApplication extends Application
 {
     protected $rootPath;
+    public static $SCRIPT_FILENAME;
 
     /**
      * Constructor.
      *
      * @param string $name     The name of the application
      * @param string $version  The version of the application
-     * @param string $rootPAth Application path
-     *
+     * @param string $rootPath Application path
+     * @param string $filename Application filename
      */
-    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', $rootPath = null)
+    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', $rootPath = null, $filename = "")
     {
+        if (empty($filename)) {
+            throw new RuntimeException("A script name must be defined.");
+        }
         $this->setRootPath($rootPath);
+        self::$SCRIPT_FILENAME = strpos($filename, './') !== 0 ? './' . $filename : $filename;
 
         parent::__construct($name, $version);
     }
@@ -39,8 +47,46 @@ class DownloaderApplication extends Application
      */
     protected function getCommandName(InputInterface $input)
     {
-        // This should return the name of your command.
-        return 'gin:dl:youtube';
+        return self::$SCRIPT_FILENAME;
+    }
+
+    /**
+     * Runs the current application.
+     *
+     * @param InputInterface  $input  An Input instance
+     * @param OutputInterface $output An Output instance
+     *
+     * @return integer 0 if everything went fine, or an error code
+     *
+     * @throws \Exception When doRun returns Exception
+     *
+     * @api
+     */
+    public function run(InputInterface $input = null, OutputInterface $output = null)
+    {
+        if (null === $output) {
+            $output = new DownloaderConsoleOutput();
+        }
+
+        return parent::run($input, $output);
+    }
+
+    /**
+     * Runs the current application.
+     *
+     * @param InputInterface  $input  An Input instance
+     * @param OutputInterface $output An Output instance
+     *
+     * @return integer 0 if everything went fine, or an error code
+     */
+    public function doRun(InputInterface $input, OutputInterface $output)
+    {
+        // if no arguments display help
+        if ($input->getFirstArgument() === null) {
+            $input = new ArrayInput(array('--help' => true));
+        }
+
+        return parent::doRun($input, $output);
     }
 
     /**

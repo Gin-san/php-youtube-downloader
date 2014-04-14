@@ -2,6 +2,7 @@
 
 namespace Gin\Downloader\Extractor;
 
+use Symfony\Component\Console\Output\OutputInterface;
 use Gin\Tools\Curl\Curl;
 use UnexpectedValueException;
 use RuntimeException;
@@ -18,17 +19,20 @@ class Youtube
     const VIDEO_WEB_URL  = "https://www.youtube.com/watch?v=%s&gl=US&hl=en&has_verified=1";
     const USER_AGENT     = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.14 Safari/537.36";
 
+    public static $CALL_NAME = "Youtube Extractor";
     protected $video_id;
     protected $player_content;
+    protected $output;
 
     /**
      * Constructor
      *
      * @param string $video_id Code Youtube video
      */
-    public function __construct($video_id)
+    public function __construct($video_id, OutputInterface $output)
     {
         $this->video_id = $video_id;
+        $this->output   = $output;
         $this->headers  = [
             'Accept-charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
             'Accept-language: en-us,en;q=0.5',
@@ -52,7 +56,6 @@ class Youtube
                 continue;
             }
             if (isset($info['token'])) {
-                echo $extra . PHP_EOL;
                 break;
             }
         }
@@ -62,10 +65,9 @@ class Youtube
             }
             throw new RuntimeException("Unable to get info");
         }
-        $title                              = $info['title'];
-        $stream_data                        = [];
+        $title       = $info['title'];
+        $stream_data = [];
         if (preg_match("#[&,]s=#", $info['url_encoded_fmt_stream_map'])) {
-            echo "encrypted signatures detected" . PHP_EOL;
             $info['url_encoded_fmt_stream_map'] = $this->getEncryptedStream();
         }
         $info['url_encoded_fmt_stream_map'] = explode(',', $info['url_encoded_fmt_stream_map']);
@@ -92,14 +94,15 @@ class Youtube
             $mime        = current($t);
             $mime        = explode('/', $mime);
             $ext         = end($mime);
-            $itag        = $stream_data['itag'] . " - " . $ext;
+            $quality        = $stream_data['itag'] . " - " . $ext;
             if (isset($stream_data['quality'])) {
-                $itag .= " - " . $stream_data['quality'];
+                $quality .= " - " . $stream_data['quality'];
             }
-            $urls[$itag] = [
-                'title' => $title,
-                'url'   => $url,
-                'ext'   => $ext
+            $urls[$stream_data['itag']] = [
+                'quality' => $quality,
+                'title'   => $title,
+                'url'     => $url,
+                'ext'     => $ext
 
             ];
         }
@@ -308,5 +311,4 @@ class Youtube
 
         return $res;
     }
-
 }
